@@ -1,0 +1,19 @@
+{
+  "timestamp": 1759697926523,
+  "operation": {
+    "id": "webapp:react:views",
+    "refs": {
+      "id": "UV_SEOEditor",
+      "version": "1759697872624"
+    }
+  },
+  "projectId": "portfolio-2",
+  "files": [
+    {
+      "path": "/mnt/data/portfolio-2/vitereact/src/components/views/UV_SEOEditor.tsx",
+      "type": "text",
+      "size": 12272,
+      "dependencies": false
+    }
+  ]
+}

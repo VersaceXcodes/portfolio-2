@@ -1,0 +1,19 @@
+{
+  "timestamp": 1759697789232,
+  "operation": {
+    "id": "webapp:react:views",
+    "refs": {
+      "id": "UV_Preview",
+      "version": "latest"
+    }
+  },
+  "projectId": "portfolio-2",
+  "files": [
+    {
+      "path": "/mnt/data/portfolio-2/vitereact/src/components/views/UV_Preview.tsx",
+      "type": "text",
+      "size": 12095,
+      "dependencies": false
+    }
+  ]
+}

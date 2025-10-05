@@ -1,0 +1,15 @@
+{
+  "timestamp": 1759697253160,
+  "operation": {
+    "id": "backend:specifications:asyncapi"
+  },
+  "projectId": "portfolio-2",
+  "files": [
+    {
+      "path": "/mnt/data/portfolio-2/backend/asyncapi.yaml",
+      "type": "text",
+      "size": 11779,
+      "dependencies": false
+    }
+  ]
+}

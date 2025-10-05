@@ -1,0 +1,19 @@
+{
+  "timestamp": 1759697768829,
+  "operation": {
+    "id": "webapp:react:views",
+    "refs": {
+      "id": "GV_UserMenu",
+      "version": "latest"
+    }
+  },
+  "projectId": "portfolio-2",
+  "files": [
+    {
+      "path": "/mnt/data/portfolio-2/vitereact/src/components/views/GV_UserMenu.tsx",
+      "type": "text",
+      "size": 5267,
+      "dependencies": false
+    }
+  ]
+}
