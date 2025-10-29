@@ -128,22 +128,21 @@ const UV_ProjectsEditor: React.FC = () => {
             ...prev,
             [apiProj.project_id]: apiProj,
           }));
-          queryClient.invalidateQueries(['api', 'sites', site_id, 'projects']);
+          queryClient.invalidateQueries({ queryKey: ['api', 'sites', site_id, 'projects'] });
         }
       },
-    }
-  );
+    },
+  });
 
   // Delete Project Mutation
-  const deleteProjectMutation = useMutation(
-    async (payload: { site_id: string; project_id: string }) => {
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (payload: { site_id: string; project_id: string }) => {
       const resp = await axios.delete(
         `${API_BASE}/api/sites/${payload.site_id}/projects/${payload.project_id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return resp.data;
     },
-    {
       onSuccess: (data) => {
         const removed = (data?.data ?? data) as Project;
         if (removed?.project_id) {
@@ -153,11 +152,11 @@ const UV_ProjectsEditor: React.FC = () => {
             delete next[removed.project_id];
             return next;
           });
-          queryClient.invalidateQueries(['api', 'sites', site_id, 'projects']);
+          queryClient.invalidateQueries({ queryKey: ['api', 'sites', site_id, 'projects'] });
         }
       },
-    }
-  );
+    },
+  });
 
   // Helpers: update local draft for a project
   const updateDraft = (project_id: string, patch: Partial<Project>) => {
@@ -201,7 +200,7 @@ const UV_ProjectsEditor: React.FC = () => {
 
   // Local small UX: loading indicator for mutations
   const isAnyMutating =
-    createProjectMutation.isLoading || updateProjectMutation.isLoading || deleteProjectMutation.isLoading;
+    createProjectMutation.isPending || updateProjectMutation.isPending || deleteProjectMutation.isPending;
 
   // UI render
   return (
