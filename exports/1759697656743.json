@@ -1,0 +1,21 @@
+{
+  "timestamp": 1759697656743,
+  "operation": {
+    "id": "backend:tests:main"
+  },
+  "projectId": "portfolio-2",
+  "files": [
+    {
+      "path": "/mnt/data/portfolio-2/backend/server.test.ts",
+      "type": "text",
+      "size": 13143,
+      "dependencies": false
+    },
+    {
+      "path": "/mnt/data/portfolio-2/backend/jest.config.ts",
+      "type": "text",
+      "size": 299,
+      "dependencies": false
+    }
+  ]
+}

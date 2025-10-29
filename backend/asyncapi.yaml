@@ -1,0 +1,511 @@
+asyncapi: 2.0.0
+info:
+  title: PortfolioPro MVP Real-time Events
+  version: 1.0.0
+  description: >
+    Realtime event definitions for PortfolioPro MVP editor and live state
+    synchronization. Uses Zod-derived types as the source of truth for payload
+    structures, aligned to the frontend global state in the datamap. All IDs are
+    strings; field names are snake_case.
+servers:
+  dev_websocket:
+    url: ws://localhost:3000
+    protocol: websocket
+    description: Development WebSocket server for realtime events
+defaultContentType: application/json
+channels:
+  /auth/state:
+    subscribe:
+      summary: Authentication state updates
+      operationId: authStateUpdates
+      message:
+        $ref: "#/components/messages/AuthState"
+  /portfolio/site/state:
+    subscribe:
+      summary: Portfolio site state updates
+      operationId: portfolioSiteStateUpdates
+      message:
+        $ref: "#/components/messages/PortfolioSiteState"
+  /portfolio/hero/state:
+    subscribe:
+      summary: Hero editor state updates
+      operationId: heroStateUpdates
+      message:
+        $ref: "#/components/messages/HeroState"
+  /portfolio/about/state:
+    subscribe:
+      summary: About editor state updates
+      operationId: aboutStateUpdates
+      message:
+        $ref: "#/components/messages/AboutState"
+  /portfolio/projects/state:
+    subscribe:
+      summary: Projects editor state updates
+      operationId: projectsStateUpdates
+      message:
+        $ref: "#/components/messages/ProjectsState"
+  /portfolio/assets/state:
+    subscribe:
+      summary: Assets state updates
+      operationId: assetsStateUpdates
+      message:
+        $ref: "#/components/messages/AssetsState"
+  /portfolio/theme/state:
+    subscribe:
+      summary: Theme editor state updates
+      operationId: themeStateUpdates
+      message:
+        $ref: "#/components/messages/ThemeState"
+  /portfolio/seo/state:
+    subscribe:
+      summary: SEO editor state updates
+      operationId: seoStateUpdates
+      message:
+        $ref: "#/components/messages/SeoState"
+  /portfolio/publish/state:
+    subscribe:
+      summary: Publish process updates
+      operationId: publishStateUpdates
+      message:
+        $ref: "#/components/messages/PublishState"
+  /portfolio/export/state:
+    subscribe:
+      summary: Export process updates
+      operationId: exportStateUpdates
+      message:
+        $ref: "#/components/messages/ExportState"
+  /portfolio/contact_submissions:
+    subscribe:
+      summary: New contact submissions
+      operationId: contactSubmissions
+      message:
+        $ref: "#/components/messages/ContactSubmission"
+  /portfolio/preview/state:
+    subscribe:
+      summary: Live preview state updates
+      operationId: previewStateUpdates
+      message:
+        $ref: "#/components/messages/PreviewState"
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        password_hash:
+          type: string
+        full_name:
+          type:
+            - string
+            - null
+        avatar_url:
+          type:
+            - string
+            - null
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - username
+        - email
+        - password_hash
+        - is_active
+        - created_at
+    AuthStatePayload:
+      type: object
+      properties:
+        current_user:
+          oneOf:
+            - $ref: "#/components/schemas/User"
+            - type: "null"
+        auth_token:
+          type:
+            - string
+            - null
+        authentication_status:
+          type: object
+          properties:
+            is_authenticated:
+              type: boolean
+            is_loading:
+              type: boolean
+          required:
+            - is_authenticated
+            - is_loading
+        error_message:
+          type:
+            - string
+            - null
+      required:
+        - authentication_status
+        - current_user
+        - auth_token
+        - error_message
+    PortfolioSitePayload:
+      type: object
+      properties:
+        site_id:
+          type:
+            - string
+            - null
+        user_id:
+          type:
+            - string
+            - null
+        site_title:
+          type: string
+        tagline:
+          type:
+            - string
+            - null
+        hero_image_url:
+          type:
+            - string
+            - null
+        about_text:
+          type:
+            - string
+            - null
+        template_id:
+          type:
+            - string
+            - null
+        primary_color:
+          type:
+            - string
+            - null
+        font_family:
+          type:
+            - string
+            - null
+        is_dark_mode:
+          type: boolean
+        seo_title:
+          type:
+            - string
+            - null
+        seo_description:
+          type:
+            - string
+            - null
+        subdomain:
+          type:
+            - string
+            - null
+        published_at:
+          type:
+            - string
+            - null
+        export_zip_url:
+          type:
+            - string
+            - null
+      required:
+        - site_title
+        - is_dark_mode
+    HeroStatePayload:
+      type: object
+      properties:
+        site_id:
+          type: string
+        site_title:
+          type: string
+        tagline:
+          type:
+            - string
+            - null
+        hero_image_url:
+          type:
+            - string
+            - null
+      required:
+        - site_id
+        - site_title
+    AboutStatePayload:
+      type: object
+      properties:
+        site_id:
+          type: string
+        about_text:
+          type:
+            - string
+            - null
+      required:
+        - site_id
+    ProjectSchema:
+      type: object
+      properties:
+        project_id:
+          type: string
+        site_id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        date:
+          type: string
+          format: date-time
+        tags:
+          type: array
+          items:
+            type: string
+        demo_url:
+          type:
+            - string
+            - null
+        code_url:
+          type:
+            - string
+            - null
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+        order_index:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type:
+            - string
+            - null
+      required:
+        - project_id
+        - site_id
+        - title
+        - description
+        - date
+        - images
+        - order_index
+        - created_at
+    ProjectsStatePayload:
+      type: object
+      properties:
+        site_id:
+          type: string
+        projects:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProjectSchema"
+      required:
+        - site_id
+        - projects
+    ImageAssetSchema:
+      type: object
+      oneOf:
+        - required:
+            - image_id
+            - url
+            - uploaded_at
+          properties:
+            image_id:
+              type: string
+            site_id:
+              type:
+                - string
+                - null
+            project_id:
+              type:
+                - string
+                - null
+            url:
+              type: string
+              format: uri
+            alt_text:
+              type: string
+            uploaded_at:
+              type: string
+              format: date-time
+        - required:
+            - image_id
+            - url
+            - uploaded_at
+          properties:
+            image_id:
+              type: string
+            site_id:
+              type:
+                - string
+                - null
+            project_id:
+              type:
+                - string
+                - null
+            url:
+              type: string
+              format: uri
+            alt_text:
+              type: string
+            uploaded_at:
+              type: string
+              format: date-time
+    AssetsStatePayload:
+      type: object
+      properties:
+        site_id:
+          type: string
+        assets:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImageAssetSchema"
+      required:
+        - site_id
+        - assets
+    ThemeStatePayload:
+      type: object
+      properties:
+        site_id:
+          type: string
+        template_id:
+          type:
+            - string
+            - null
+        primary_color:
+          type:
+            - string
+            - null
+        font_family:
+          type:
+            - string
+            - null
+        is_dark_mode:
+          type: boolean
+      required:
+        - site_id
+        - is_dark_mode
+    SeoStatePayload:
+      type: object
+      properties:
+        site_id:
+          type: string
+        seo_title:
+          type:
+            - string
+            - null
+        seo_description:
+          type:
+            - string
+            - null
+      required:
+        - site_id
+    PublishStatePayload:
+      type: object
+      properties:
+        site_id:
+          type: string
+        status:
+          type:
+            - string
+            - null
+        message:
+          type:
+            - string
+            - null
+        published_at:
+          type:
+            - string
+            - null
+      required:
+        - site_id
+    ExportStatePayload:
+      type: object
+      properties:
+        site_id:
+          type: string
+        progress:
+          type: number
+        status:
+          type:
+            - string
+            - null
+        export_zip_url:
+          type:
+            - string
+            - null
+      required:
+        - site_id
+    ContactSubmissionPayload:
+      type: object
+      properties:
+        submission_id:
+          type: string
+        site_id:
+          type:
+            - string
+            - null
+        name:
+          type:
+            - string
+            - null
+        email:
+          type:
+            - string
+            - null
+        message:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - submission_id
+        - message
+        - created_at
+    PreviewStatePayload:
+      type: object
+      properties:
+        site_id:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - site_id
+        - updated_at
+  messages:
+    AuthState:
+      payload:
+        $ref: "#/components/schemas/AuthStatePayload"
+    PortfolioSiteState:
+      payload:
+        $ref: "#/components/schemas/PortfolioSitePayload"
+    HeroState:
+      payload:
+        $ref: "#/components/schemas/HeroStatePayload"
+    AboutState:
+      payload:
+        $ref: "#/components/schemas/AboutStatePayload"
+    ProjectsState:
+      payload:
+        $ref: "#/components/schemas/ProjectsStatePayload"
+    AssetsState:
+      payload:
+        $ref: "#/components/schemas/AssetsStatePayload"
+    ThemeState:
+      payload:
+        $ref: "#/components/schemas/ThemeStatePayload"
+    SeoState:
+      payload:
+        $ref: "#/components/schemas/SeoStatePayload"
+    PublishState:
+      payload:
+        $ref: "#/components/schemas/PublishStatePayload"
+    ExportState:
+      payload:
+        $ref: "#/components/schemas/ExportStatePayload"
+    ContactSubmission:
+      payload:
+        $ref: "#/components/schemas/ContactSubmissionPayload"
+    PreviewState:
+      payload:
+        $ref: "#/components/schemas/PreviewStatePayload"

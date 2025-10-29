@@ -1,0 +1,19 @@
+{
+  "timestamp": 1759697736467,
+  "operation": {
+    "id": "webapp:react:views",
+    "refs": {
+      "id": "UV_ExportPanel",
+      "version": "1759697690526"
+    }
+  },
+  "projectId": "portfolio-2",
+  "files": [
+    {
+      "path": "/mnt/data/portfolio-2/vitereact/src/components/views/UV_ExportPanel.tsx",
+      "type": "text",
+      "size": 9240,
+      "dependencies": false
+    }
+  ]
+}

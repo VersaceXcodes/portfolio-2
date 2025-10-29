@@ -1,0 +1,21 @@
+{
+  "timestamp": 1759697532793,
+  "operation": {
+    "id": "settings:config:package"
+  },
+  "projectId": "portfolio-2",
+  "files": [
+    {
+      "path": "/mnt/data/portfolio-2/backend/package.json",
+      "type": "text",
+      "size": 1446,
+      "dependencies": true
+    },
+    {
+      "path": "/mnt/data/portfolio-2/backend/.env",
+      "type": "text",
+      "size": 290,
+      "dependencies": false
+    }
+  ]
+}
