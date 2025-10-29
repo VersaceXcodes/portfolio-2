@@ -13,6 +13,8 @@ import UV_Dashboard from '@/components/views/UV_Dashboard.tsx';
 import UV_HeroEditor from '@/components/views/UV_HeroEditor.tsx';
 import UV_AboutEditor from '@/components/views/UV_AboutEditor.tsx';
 import UV_ProjectsEditor from '@/components/views/UV_ProjectsEditor.tsx';
+import UV_ProjectEditor from '@/components/views/UV_ProjectEditor.tsx';
+import UV_AssetManager from '@/components/views/UV_AssetManager.tsx';
 import UV_ThemeEditor from '@/components/views/UV_ThemeEditor.tsx';
 import UV_SEOEditor from '@/components/views/UV_SEOEditor.tsx';
 import UV_SettingsEditor from '@/components/views/UV_SettingsEditor.tsx';
@@ -136,7 +138,22 @@ const App: React.FC = () => {
                   </ProtectedRoute>
                 }
               />
-
+              <Route
+                path="/dashboard/projects/:project_id"
+                element={
+                  <ProtectedRoute>
+                    <UV_ProjectEditor />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/assets"
+                element={
+                  <ProtectedRoute>
+                    <UV_AssetManager />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/dashboard/theme"
                 element={

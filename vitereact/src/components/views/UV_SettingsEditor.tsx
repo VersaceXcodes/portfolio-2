@@ -76,25 +76,28 @@ const UV_SettingsEditor: React.FC = () => {
   );
 
   // Mutation hook for saving
-  const { mutate: saveSettings, isPending: isSaving } = useMutation({
-    mutationFn: (payload: SitePayload) => updateSiteSettings(payload),
-    onSuccess: (data) => {
-      // Merge backend payload into store (crucial for state consistency)
-      // We derive the merged object using the current store snapshot and API response
-      const merged = { ...currentSite, ...(data as Site) };
-      set_site(merged as Site);
-      // Update local form to reflect persisted values
-      setForm({ ...(merged as Site) });
-      setSaveInfo('Settings saved successfully.');
-      // Clear ephemeral messages after a moment
-      setTimeout(() => setSaveInfo(null), 1800);
-    },
-    onError: (err: any) => {
-      const message = err?.response?.data?.message || err?.message || 'Failed to save settings';
-      setLocalError(message);
-      setSaveInfo(null);
-    },
-  });
+  const { mutate: saveSettings, isLoading: isSaving } = useMutation(
+    (payload: SitePayload) => updateSiteSettings(payload),
+    {
+      onSuccess: (data) => {
+        // Merge backend payload into store (crucial for state consistency)
+        // We derive the merged object using the current store snapshot and API response
+        const merged = { ...currentSite, ...(data as Site) };
+        set_site(merged as Site);
+        // Update local form to reflect persisted values
+        setForm({ ...(merged as Site) });
+        setSaveInfo('Settings saved successfully.');
+        // Clear ephemeral messages after a moment
+        setTimeout(() => setSaveInfo(null), 1800);
+      },
+      onError: (err: any) => {
+        const message = err?.response?.data?.message || err?.message || 'Failed to save settings';
+        setLocalError(message);
+        setSaveInfo(null);
+      }
+      // No explicit retries; rely on global query options if needed
+    }
+  );
 
   // Initialize form from current store on mount (safe default)
   useEffect(() => {

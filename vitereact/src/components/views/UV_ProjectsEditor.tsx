@@ -83,8 +83,8 @@ const UV_ProjectsEditor: React.FC = () => {
   }, [listResponse, set_projects]);
 
   // Create Project Mutation
-  const createProjectMutation = useMutation({
-    mutationFn: async (payload: Partial<Project>) => {
+  const createProjectMutation = useMutation(
+    async (payload: Partial<Project>) => {
       const resp = await axios.post(
         `${API_BASE}/api/sites/${site_id}/projects`,
         payload,
@@ -92,23 +92,25 @@ const UV_ProjectsEditor: React.FC = () => {
       );
       return resp.data;
     },
-    onSuccess: (data) => {
-      const apiProj: Project = (data?.data ?? data) as Project;
-      // Update local store
-      add_project(apiProj);
-      // Reset draft/new project form
-      setNewProject({ title: '', description: '', date: '', tags: [], images: [], demo_url: '', code_url: '', order_index: 0 });
-      // Clear draft for this id if existed
-      if (apiProj?.project_id) {
-        setDraftProjects(prev => ({ ...prev, [apiProj.project_id]: apiProj }));
-      }
-      queryClient.invalidateQueries({ queryKey: ['api', 'sites', site_id, 'projects'] });
-    },
-  });
+    {
+      onSuccess: (data) => {
+        const apiProj: Project = (data?.data ?? data) as Project;
+        // Update local store
+        add_project(apiProj);
+        // Reset draft/new project form
+        setNewProject({ title: '', description: '', date: '', tags: [], images: [], demo_url: '', code_url: '', order_index: 0 });
+        // Clear draft for this id if existed
+        if (apiProj?.project_id) {
+          setDraftProjects(prev => ({ ...prev, [apiProj.project_id]: apiProj }));
+        }
+        queryClient.invalidateQueries(['api', 'sites', site_id, 'projects']);
+      },
+    }
+  );
 
   // Update Project Mutation
-  const updateProjectMutation = useMutation({
-    mutationFn: async (payload: Partial<Project> & { id?: string }) => {
+  const updateProjectMutation = useMutation(
+    async (payload: Partial<Project> & { id?: string }) => {
       // API expects: PUT /api/sites/{site_id}/projects/{project_id}
       const project_id = payload.id;
       const resp = await axios.put(
@@ -118,41 +120,45 @@ const UV_ProjectsEditor: React.FC = () => {
       );
       return resp.data;
     },
-    onSuccess: (data) => {
-      const apiProj: Project = (data?.data ?? data) as Project;
-      if (apiProj) {
-        update_project(apiProj);
-        setDraftProjects(prev => ({
-          ...prev,
-          [apiProj.project_id]: apiProj,
-        }));
-        queryClient.invalidateQueries({ queryKey: ['api', 'sites', site_id, 'projects'] });
-      }
-    },
-  });
+    {
+      onSuccess: (data) => {
+        const apiProj: Project = (data?.data ?? data) as Project;
+        if (apiProj) {
+          update_project(apiProj);
+          setDraftProjects(prev => ({
+            ...prev,
+            [apiProj.project_id]: apiProj,
+          }));
+          queryClient.invalidateQueries(['api', 'sites', site_id, 'projects']);
+        }
+      },
+    }
+  );
 
   // Delete Project Mutation
-  const deleteProjectMutation = useMutation({
-    mutationFn: async (payload: { site_id: string; project_id: string }) => {
+  const deleteProjectMutation = useMutation(
+    async (payload: { site_id: string; project_id: string }) => {
       const resp = await axios.delete(
         `${API_BASE}/api/sites/${payload.site_id}/projects/${payload.project_id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return resp.data;
     },
-    onSuccess: (data) => {
-      const removed = (data?.data ?? data) as Project;
-      if (removed?.project_id) {
-        delete_project(removed.project_id);
-        setDraftProjects(prev => {
-          const next = { ...prev };
-          delete next[removed.project_id];
-          return next;
-        });
-        queryClient.invalidateQueries({ queryKey: ['api', 'sites', site_id, 'projects'] });
-      }
-    },
-  });
+    {
+      onSuccess: (data) => {
+        const removed = (data?.data ?? data) as Project;
+        if (removed?.project_id) {
+          delete_project(removed.project_id);
+          setDraftProjects(prev => {
+            const next = { ...prev };
+            delete next[removed.project_id];
+            return next;
+          });
+          queryClient.invalidateQueries(['api', 'sites', site_id, 'projects']);
+        }
+      },
+    }
+  );
 
   // Helpers: update local draft for a project
   const updateDraft = (project_id: string, patch: Partial<Project>) => {
@@ -196,7 +202,7 @@ const UV_ProjectsEditor: React.FC = () => {
 
   // Local small UX: loading indicator for mutations
   const isAnyMutating =
-    createProjectMutation.isPending || updateProjectMutation.isPending || deleteProjectMutation.isPending;
+    createProjectMutation.isLoading || updateProjectMutation.isLoading || deleteProjectMutation.isLoading;
 
   // UI render
   return (
@@ -288,9 +294,9 @@ const UV_ProjectsEditor: React.FC = () => {
                   }}
                   className="px-4 py-2 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
                   aria-label="Create project"
-                  disabled={createProjectMutation.isPending}
+                  disabled={createProjectMutation.isLoading}
                 >
-                  {createProjectMutation.isPending ? 'Adding...' : 'Add Project'}
+                  {createProjectMutation.isLoading ? 'Adding...' : 'Add Project'}
                 </button>
               </div>
             </div>
@@ -614,7 +620,7 @@ const UV_ProjectsEditor: React.FC = () => {
                         onClick={onSave}
                         className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
                         aria-label={`Save project ${p.title}`}
-                        disabled={updateProjectMutation.isPending || isAnyMutating}
+                        disabled={updateProjectMutation.isLoading || isAnyMutating}
                       >
                         Save
                       </button>
@@ -622,7 +628,7 @@ const UV_ProjectsEditor: React.FC = () => {
                         onClick={onDelete}
                         className="px-4 py-2 rounded-md bg-red-600 text-white text-sm font-medium hover:bg-red-700"
                         aria-label={`Delete project ${p.title}`}
-                        disabled={deleteProjectMutation.isPending}
+                        disabled={deleteProjectMutation.isLoading}
                       >
                         Delete
                       </button>
@@ -651,7 +657,7 @@ const UV_ProjectsEditor: React.FC = () => {
       </section>
 
       {/* Loading / error indicators for UI actions (non-blocking) */}
-      {(isLoadingProjects || createProjectMutation.isPending || updateProjectMutation.isPending || deleteProjectMutation.isPending) && (
+      {(isLoadingProjects || createProjectMutation.isLoading || updateProjectMutation.isLoading || deleteProjectMutation.isLoading) && (
         <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg" aria-live="polite">
           Saving...
         </div>
