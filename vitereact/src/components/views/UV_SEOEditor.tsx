@@ -74,11 +74,8 @@ const UV_SEOEditor: React.FC = () => {
           setSite(siteFromResponse);
         } else {
           // Fallback: shallow-merge only SEO fields with existing site object
-          const existing = require('react').useMemo ? null : null; // placeholder to avoid TS error in this context
           // Use a safer approach: read current site fields from the store and merge
           // (We avoid object-destructuring selectors; use individual setters)
-          const currentSiteForMerge = ({} as any) // build a merged object from minimal known fields
-            as any;
           // Try to preserve existing known fields if accessible
           // We will reconstruct a minimal Site-like object containing essential required fields
           // Read essential fields individually (best effort)
