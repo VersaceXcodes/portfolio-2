@@ -30,8 +30,8 @@ const UV_Publish: React.FC = () => {
   const queryClient = useQueryClient();
 
   // Publish mutation: PUT /api/sites/{site_id}/publish
-  const publishMutation = useMutation(
-    async () => {
+  const publishMutation = useMutation({
+    mutationFn: async () => {
       if (!site_id) throw new Error('Site ID is missing');
       const resp = await axios.put(
         `${API_BASE}/api/sites/${site_id}/publish`,
@@ -42,11 +42,10 @@ const UV_Publish: React.FC = () => {
       );
       return resp;
     },
-    {
       onMutate: () => {
         // clear prior errors and indicate provisioning
         setPublishError(null);
-        set_auth_error(null);
+        setAuthError(null);
         set_publish_status('provisioning');
       },
       onSuccess: (resp) => {
@@ -71,12 +70,12 @@ const UV_Publish: React.FC = () => {
         setPublishError(msg);
         set_publish_status('failed');
       },
-    }
-  );
+    },
+  });
 
   // Export mutation: POST /api/sites/{site_id}/export
-  const exportMutation = useMutation(
-    async () => {
+  const exportMutation = useMutation({
+    mutationFn: async () => {
       if (!site_id) throw new Error('Site ID is missing');
       const resp = await axios.post(
         `${API_BASE}/api/sites/${site_id}/export`,
@@ -87,7 +86,6 @@ const UV_Publish: React.FC = () => {
       );
       return resp;
     },
-    {
       onMutate: () => {
         setExportError(null);
         setIsExporting(true);
@@ -110,8 +108,8 @@ const UV_Publish: React.FC = () => {
         setExportError(msg);
         setIsExporting(false);
       },
-    }
-  );
+    },
+  });
 
   // Simple local auth error reset on user action
   const clearAuthError = () => setAuthError(null);
@@ -132,12 +130,12 @@ const UV_Publish: React.FC = () => {
   };
 
   // Derived UI states
-  const isPublishing = publishMutation.isLoading;
+  const isPublishing = publishMutation.isPending;
   const canExport = !!site_id && !!published_at;
   const canPublish = !!site_id; // Site must exist in store
 
   // Accessibility live region content
-  const liveRegionMessage = publishMutation.isLoading
+  const liveRegionMessage = publishMutation.isPending
     ? 'Publishing to subdomain in progress.'
     : publishMutation.isSuccess
     ? 'Publish completed successfully.'

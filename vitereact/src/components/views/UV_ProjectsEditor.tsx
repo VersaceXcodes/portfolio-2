@@ -83,8 +83,8 @@ const UV_ProjectsEditor: React.FC = () => {
   }, [listResponse, set_projects]);
 
   // Create Project Mutation
-  const createProjectMutation = useMutation(
-    async (payload: Partial<Project>) => {
+  const createProjectMutation = useMutation({
+    mutationFn: async (payload: Partial<Project>) => {
       const resp = await axios.post(
         `${API_BASE}/api/sites/${site_id}/projects`,
         payload,
@@ -92,7 +92,6 @@ const UV_ProjectsEditor: React.FC = () => {
       );
       return resp.data;
     },
-    {
       onSuccess: (data) => {
         const apiProj: Project = (data?.data ?? data) as Project;
         // Update local store
@@ -103,14 +102,14 @@ const UV_ProjectsEditor: React.FC = () => {
         if (apiProj?.project_id) {
           setDraftProjects(prev => ({ ...prev, [apiProj.project_id]: apiProj }));
         }
-        queryClient.invalidateQueries(['api', 'sites', site_id, 'projects']);
+        queryClient.invalidateQueries({ queryKey: ['api', 'sites', site_id, 'projects'] });
       },
-    }
-  );
+    },
+  });
 
   // Update Project Mutation
-  const updateProjectMutation = useMutation(
-    async (payload: Partial<Project> & { id?: string }) => {
+  const updateProjectMutation = useMutation({
+    mutationFn: async (payload: Partial<Project> & { id?: string }) => {
       // API expects: PUT /api/sites/{site_id}/projects/{project_id}
       const project_id = payload.id;
       const resp = await axios.put(

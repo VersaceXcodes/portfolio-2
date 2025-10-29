@@ -42,8 +42,8 @@ const UV_SEOEditor: React.FC = () => {
   // We'll implement a local mutation and update the store on success
   const apiBase = (import.meta.env.VITE_API_BASE_URL as string) || 'http://localhost:3000';
 
-  const updateSeoMutation = useMutation(
-    async (): Promise<any> => {
+  const updateSeoMutation = useMutation({
+    mutationFn: async (): Promise<any> => {
       const payload: SeoPayload = {
         seo_title: seo_title.trim(),
         seo_description: seo_description.trim(),
@@ -60,7 +60,6 @@ const UV_SEOEditor: React.FC = () => {
       );
       return resp.data;
     },
-    {
       onSuccess: (data) => {
         // Backend may return the full Site payload or a partial; handle both
         const siteFromResponse = data?.data ?? data ?? {};
@@ -111,7 +110,7 @@ const UV_SEOEditor: React.FC = () => {
 
         // Optional: invalidate related queries to refresh data elsewhere
         try {
-          queryClient.invalidateQueries(['sites', site_id, 'seo']);
+          queryClient.invalidateQueries({ queryKey: ['sites', site_id, 'seo'] });
         } catch {
           // no-op
         }
@@ -123,8 +122,8 @@ const UV_SEOEditor: React.FC = () => {
           'Failed to update SEO. Please check your inputs.';
         setLocalError(msg);
       },
-    }
-  );
+    },
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -228,11 +227,11 @@ const UV_SEOEditor: React.FC = () => {
               </div>
               <button
                 type="submit"
-                disabled={updateSeoMutation.isLoading}
+                disabled={updateSeoMutation.isPending}
                 className="inline-flex items-center px-6 py-3 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 aria-label="Save SEO changes"
               >
-                {updateSeoMutation.isLoading ? (
+                {updateSeoMutation.isPending ? (
                   <span className="inline-flex items-center">
                     <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

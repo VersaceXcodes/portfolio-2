@@ -1,11 +1,11 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import * as fs from 'fs';
 import { Pool } from 'pg';
 import { fileURLToPath } from 'url';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import multer from 'multer';
 import archiver from 'archiver';
 import { v4 as uuidv4 } from 'uuid';
@@ -26,6 +26,23 @@ dotenv.config();
 // ESM workaround for __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Extended Request types
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    username: string;
+    email: string;
+    full_name: string;
+    created_at: Date;
+  };
+  file?: Express.Multer.File;
+}
+
+interface JwtPayloadWithUser extends JwtPayload {
+  user_id: string;
+  email: string;
+}
 
 // Error response utility
 interface ErrorResponse {
@@ -77,7 +94,7 @@ const pool = new Pool(
   DATABASE_URL
     ? { 
         connectionString: DATABASE_URL, 
-        ssl: { require: true } 
+        ssl: { rejectUnauthorized: false } 
       }
     : {
         host: PGHOST,
@@ -85,7 +102,7 @@ const pool = new Pool(
         user: PGUSER,
         password: PGPASSWORD,
         port: Number(PGPORT),
-        ssl: { require: true },
+        ssl: { rejectUnauthorized: false },
       }
 );
 
@@ -126,7 +143,7 @@ const upload = multer({
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files allowed'), false);
+      cb(new Error('Only image files allowed'));
     }
   }
 });
@@ -218,7 +235,7 @@ initializePortfolioTables();
   Authentication middleware for protected routes
   Validates JWT token and attaches user info to request
 */
-const authenticateToken = async (req, res, next) => {
+const authenticateToken = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -227,7 +244,7 @@ const authenticateToken = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayloadWithUser;
     const result = await pool.query('SELECT id, username, email, full_name, created_at FROM users WHERE id = $1', [decoded.user_id]);
     
     if (result.rows.length === 0) {
@@ -451,7 +468,7 @@ app.post('/api/auth/login', async (req, res) => {
   Logout user
   Invalidates current JWT token (basic implementation)
 */
-app.post('/api/auth/logout', authenticateToken, (req, res) => {
+app.post('/api/auth/logout', authenticateToken, (req: AuthenticatedRequest, res: Response) => {
   // In a JWT stateless setup, logout is primarily client-side
   // For enhanced security, could maintain a token blacklist
   res.json({ success: true });
@@ -491,7 +508,7 @@ app.get('/api/users/:user_id', async (req, res) => {
   Create new portfolio site
   Initializes a new portfolio site for the authenticated user
 */
-app.post('/api/sites', authenticateToken, async (req, res) => {
+app.post('/api/sites', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { 
       site_title, 
@@ -539,7 +556,7 @@ app.post('/api/sites', authenticateToken, async (req, res) => {
   List user's portfolio sites
   Returns all sites belonging to the authenticated user
 */
-app.get('/api/sites', authenticateToken, async (req, res) => {
+app.get('/api/sites', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const result = await pool.query(
       'SELECT * FROM portfolio_sites WHERE user_id = $1 ORDER BY created_at DESC',
@@ -586,7 +603,7 @@ app.get('/api/sites/:site_id', async (req, res) => {
   Update portfolio site
   Updates site information with provided data
 */
-app.put('/api/sites/:site_id', authenticateToken, async (req, res) => {
+app.put('/api/sites/:site_id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { site_id } = req.params;
     const updates = req.body;
@@ -650,7 +667,7 @@ app.put('/api/sites/:site_id', authenticateToken, async (req, res) => {
   Publish portfolio site
   Sets published timestamp and makes site live
 */
-app.put('/api/sites/:site_id/publish', authenticateToken, async (req, res) => {
+app.put('/api/sites/:site_id/publish', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { site_id } = req.params;
 
@@ -688,7 +705,7 @@ app.put('/api/sites/:site_id/publish', authenticateToken, async (req, res) => {
   Export portfolio site as static files
   Generates ZIP bundle containing HTML/CSS/JS
 */
-app.post('/api/sites/:site_id/export', authenticateToken, async (req, res) => {
+app.post('/api/sites/:site_id/export', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { site_id } = req.params;
 
@@ -733,7 +750,7 @@ app.post('/api/sites/:site_id/export', authenticateToken, async (req, res) => {
   Update site hero section
   Updates hero-specific fields
 */
-app.put('/api/sites/:site_id/hero', authenticateToken, async (req, res) => {
+app.put('/api/sites/:site_id/hero', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { site_id } = req.params;
     const { title, tagline, hero_image_url } = req.body;
@@ -772,7 +789,7 @@ app.put('/api/sites/:site_id/hero', authenticateToken, async (req, res) => {
   Update site about section
   Updates about text and avatar
 */
-app.put('/api/sites/:site_id/about', authenticateToken, async (req, res) => {
+app.put('/api/sites/:site_id/about', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { site_id } = req.params;
     const { bio, avatar_url } = req.body;
@@ -819,7 +836,7 @@ app.put('/api/sites/:site_id/about', authenticateToken, async (req, res) => {
   Update site SEO settings
   Updates SEO title and description
 */
-app.put('/api/sites/:site_id/seo', authenticateToken, async (req, res) => {
+app.put('/api/sites/:site_id/seo', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { site_id } = req.params;
     const { seo_title, seo_description } = req.body;
@@ -858,7 +875,7 @@ app.put('/api/sites/:site_id/seo', authenticateToken, async (req, res) => {
   Update site theme settings
   Updates template, colors, and typography
 */
-app.put('/api/sites/:site_id/theme', authenticateToken, async (req, res) => {
+app.put('/api/sites/:site_id/theme', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { site_id } = req.params;
     const { template_id, primary_color, font_family, is_dark_mode } = req.body;
@@ -922,7 +939,7 @@ app.get('/api/sites/:site_id/projects', async (req, res) => {
   Create new project for a site
   Adds a new project to the specified portfolio site
 */
-app.post('/api/sites/:site_id/projects', authenticateToken, async (req, res) => {
+app.post('/api/sites/:site_id/projects', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { site_id } = req.params;
     const { title, description, date, tags = [], demo_url, code_url, images = [], order_index = 0 } = req.body;
@@ -967,7 +984,7 @@ app.post('/api/sites/:site_id/projects', authenticateToken, async (req, res) => 
   Update existing project
   Updates project information with provided data
 */
-app.put('/api/sites/:site_id/projects/:project_id', authenticateToken, async (req, res) => {
+app.put('/api/sites/:site_id/projects/:project_id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { site_id, project_id } = req.params;
     const updates = req.body;
@@ -1033,7 +1050,7 @@ app.put('/api/sites/:site_id/projects/:project_id', authenticateToken, async (re
   Delete project
   Removes project and associated assets
 */
-app.delete('/api/sites/:site_id/projects/:project_id', authenticateToken, async (req, res) => {
+app.delete('/api/sites/:site_id/projects/:project_id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { site_id, project_id } = req.params;
 
@@ -1074,7 +1091,7 @@ app.delete('/api/sites/:site_id/projects/:project_id', authenticateToken, async 
   Upload image for project
   Handles file upload and creates image asset record
 */
-app.post('/api/sites/:site_id/projects/:project_id/images', authenticateToken, upload.single('image'), async (req, res) => {
+app.post('/api/sites/:site_id/projects/:project_id/images', authenticateToken, upload.single('image'), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { site_id, project_id } = req.params;
     const { alt_text } = req.body;
@@ -1132,7 +1149,7 @@ app.post('/api/sites/:site_id/projects/:project_id/images', authenticateToken, u
   Create site asset
   Uploads and manages site-level assets
 */
-app.post('/api/sites/:site_id/assets', authenticateToken, upload.single('asset'), async (req, res) => {
+app.post('/api/sites/:site_id/assets', authenticateToken, upload.single('asset'), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { site_id } = req.params;
     const { alt_text } = req.body;
@@ -1177,7 +1194,7 @@ app.post('/api/sites/:site_id/assets', authenticateToken, upload.single('asset')
   Update site asset
   Updates asset metadata
 */
-app.put('/api/sites/:site_id/assets/:asset_id', authenticateToken, async (req, res) => {
+app.put('/api/sites/:site_id/assets/:asset_id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { site_id, asset_id } = req.params;
     const { url, alt_text } = req.body;
@@ -1218,7 +1235,7 @@ app.put('/api/sites/:site_id/assets/:asset_id', authenticateToken, async (req, r
   Delete site asset
   Removes asset and file
 */
-app.delete('/api/sites/:site_id/assets/:asset_id', authenticateToken, async (req, res) => {
+app.delete('/api/sites/:site_id/assets/:asset_id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { site_id, asset_id } = req.params;
 
@@ -1295,7 +1312,7 @@ app.post('/api/contact/submit', async (req, res) => {
   Dashboard: List projects with search and pagination
   Provides dashboard interface for project management
 */
-app.get('/api/dashboard/projects', authenticateToken, async (req, res) => {
+app.get('/api/dashboard/projects', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { site_id, search_query, page = 1, page_size = 10 } = req.query;
 
@@ -1313,15 +1330,15 @@ app.get('/api/dashboard/projects', authenticateToken, async (req, res) => {
       return res.status(404).json(createErrorResponse('Site not found', null, 'SITE_NOT_FOUND'));
     }
 
-    if (siteCheck.rows[0].user_id !== req.user.id) {
+    if (siteCheck.rows[0].user_id !== req.user!.id) {
       return res.status(403).json(createErrorResponse('Access denied', null, 'ACCESS_DENIED'));
     }
 
     let query = 'SELECT * FROM portfolio_projects WHERE site_id = $1';
-    let query_params = [site_id];
+    let query_params: any[] = [site_id];
     let param_index = 2;
 
-    if (search_query) {
+    if (search_query && typeof search_query === 'string') {
       query += ` AND (title ILIKE $${param_index} OR description ILIKE $${param_index})`;
       query_params.push(`%${search_query}%`);
       param_index++;
@@ -1329,17 +1346,19 @@ app.get('/api/dashboard/projects', authenticateToken, async (req, res) => {
 
     query += ' ORDER BY order_index ASC, created_at DESC';
 
-    const offset = (parseInt(page) - 1) * parseInt(page_size);
+    const pageNum = typeof page === 'string' ? parseInt(page) : Number(page);
+    const pageSizeNum = typeof page_size === 'string' ? parseInt(page_size) : Number(page_size);
+    const offset = (pageNum - 1) * pageSizeNum;
     query += ` LIMIT $${param_index} OFFSET $${param_index + 1}`;
-    query_params.push(parseInt(page_size), offset);
+    query_params.push(pageSizeNum, offset);
 
     const result = await pool.query(query, query_params);
 
     // Get total count
     let count_query = 'SELECT COUNT(*) FROM portfolio_projects WHERE site_id = $1';
-    let count_params = [site_id];
+    let count_params: any[] = [site_id];
 
-    if (search_query) {
+    if (search_query && typeof search_query === 'string') {
       count_query += ' AND (title ILIKE $2 OR description ILIKE $2)';
       count_params.push(`%${search_query}%`);
     }
@@ -1360,7 +1379,7 @@ app.get('/api/dashboard/projects', authenticateToken, async (req, res) => {
   Dashboard: List contact submissions
   Provides admin interface for viewing contact form submissions
 */
-app.get('/api/dashboard/submissions', authenticateToken, async (req, res) => {
+app.get('/api/dashboard/submissions', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     // Get submissions for all sites owned by the user
     const result = await pool.query(`
@@ -1369,7 +1388,7 @@ app.get('/api/dashboard/submissions', authenticateToken, async (req, res) => {
       LEFT JOIN portfolio_sites ps ON cs.site_id = ps.site_id
       WHERE ps.user_id = $1 OR cs.site_id IS NULL
       ORDER BY cs.created_at DESC
-    `, [req.user.id]);
+    `, [req.user!.id]);
 
     res.json({
       data: result.rows,
@@ -1397,7 +1416,7 @@ app.get('/api/dashboard/preview', (req, res) => {
   Dashboard: Export status
   Returns current export status and download URLs
 */
-app.get('/api/dashboard/export', authenticateToken, (req, res) => {
+app.get('/api/dashboard/export', authenticateToken, (req: AuthenticatedRequest, res: Response) => {
   // Mock export status - in production this would check actual export jobs
   res.json({
     export_zip_url: `https://example.com/exports/portfolio-${Date.now()}.zip`,
@@ -1477,8 +1496,9 @@ app.get(/^(?!\/api).*/, (req, res) => {
 export { app, pool };
 
 // Start the server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`PortfolioPro API server running on port ${PORT} and listening on 0.0.0.0`);
+const portNum = typeof PORT === 'string' ? parseInt(PORT) : PORT;
+app.listen(portNum, '0.0.0.0', () => {
+  console.log(`PortfolioPro API server running on port ${portNum} and listening on 0.0.0.0`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Storage directory: ${storage_dir}`);
 });
