@@ -292,9 +292,9 @@ const UV_ProjectsEditor: React.FC = () => {
                   }}
                   className="px-4 py-2 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
                   aria-label="Create project"
-                  disabled={createProjectMutation.isLoading}
+                  disabled={createProjectMutation.isPending}
                 >
-                  {createProjectMutation.isLoading ? 'Adding...' : 'Add Project'}
+                  {createProjectMutation.isPending ? 'Adding...' : 'Add Project'}
                 </button>
               </div>
             </div>
@@ -618,7 +618,7 @@ const UV_ProjectsEditor: React.FC = () => {
                         onClick={onSave}
                         className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
                         aria-label={`Save project ${p.title}`}
-                        disabled={updateProjectMutation.isLoading || isAnyMutating}
+                        disabled={updateProjectMutation.isPending || isAnyMutating}
                       >
                         Save
                       </button>
@@ -626,7 +626,7 @@ const UV_ProjectsEditor: React.FC = () => {
                         onClick={onDelete}
                         className="px-4 py-2 rounded-md bg-red-600 text-white text-sm font-medium hover:bg-red-700"
                         aria-label={`Delete project ${p.title}`}
-                        disabled={deleteProjectMutation.isLoading}
+                        disabled={deleteProjectMutation.isPending}
                       >
                         Delete
                       </button>
@@ -655,7 +655,7 @@ const UV_ProjectsEditor: React.FC = () => {
       </section>
 
       {/* Loading / error indicators for UI actions (non-blocking) */}
-      {(isLoadingProjects || createProjectMutation.isLoading || updateProjectMutation.isLoading || deleteProjectMutation.isLoading) && (
+      {(isLoadingProjects || createProjectMutation.isPending || updateProjectMutation.isPending || deleteProjectMutation.isPending) && (
         <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg" aria-live="polite">
           Saving...
         </div>
