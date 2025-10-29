@@ -42,34 +42,33 @@ const UV_Publish: React.FC = () => {
       );
       return resp;
     },
-      onMutate: () => {
-        // clear prior errors and indicate provisioning
-        setPublishError(null);
-        setAuthError(null);
-        set_publish_status('provisioning');
-      },
-      onSuccess: (resp) => {
-        const data = (resp.data?.data ?? resp.data ?? {}) as {
-          site_id?: string;
-          published_at?: string;
-          subdomain?: string;
-          export_zip_url?: string;
-        };
-        const updated: Site = {
-          ...current_site,
-          site_id: data.site_id ?? site_id,
-          published_at: data.published_at ?? current_site.published_at,
-          subdomain: data.subdomain ?? current_site.subdomain,
-          export_zip_url: data.export_zip_url ?? current_site.export_zip_url,
-        } as Site;
-        set_site(updated);
-        set_publish_status('ready');
-      },
-      onError: (err: any) => {
-        const msg = err?.response?.data?.message || err?.message || 'Publish failed';
-        setPublishError(msg);
-        set_publish_status('failed');
-      },
+    onMutate: () => {
+      // clear prior errors and indicate provisioning
+      setPublishError(null);
+      setAuthError(null);
+      set_publish_status('provisioning');
+    },
+    onSuccess: (resp) => {
+      const data = (resp.data?.data ?? resp.data ?? {}) as {
+        site_id?: string;
+        published_at?: string;
+        subdomain?: string;
+        export_zip_url?: string;
+      };
+      const updated: Site = {
+        ...current_site,
+        site_id: data.site_id ?? site_id,
+        published_at: data.published_at ?? current_site.published_at,
+        subdomain: data.subdomain ?? current_site.subdomain,
+        export_zip_url: data.export_zip_url ?? current_site.export_zip_url,
+      } as Site;
+      set_site(updated);
+      set_publish_status('ready');
+    },
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message || err?.message || 'Publish failed';
+      setPublishError(msg);
+      set_publish_status('failed');
     },
   });
 
@@ -86,28 +85,27 @@ const UV_Publish: React.FC = () => {
       );
       return resp;
     },
-      onMutate: () => {
-        setExportError(null);
-        setIsExporting(true);
-      },
-      onSuccess: (resp) => {
-        const data = (resp.data?.data ?? resp.data ?? {}) as {
-          export_zip_url?: string;
-          export_path?: string;
-        };
-        // Update site with new export URL if provided
-        const updated: Site = {
-          ...current_site,
-          export_zip_url: data.export_zip_url ?? current_site.export_zip_url,
-        } as Site;
-        set_site(updated);
-        setIsExporting(false);
-      },
-      onError: (err: any) => {
-        const msg = err?.response?.data?.message || err?.message || 'Export failed';
-        setExportError(msg);
-        setIsExporting(false);
-      },
+    onMutate: () => {
+      setExportError(null);
+      setIsExporting(true);
+    },
+    onSuccess: (resp) => {
+      const data = (resp.data?.data ?? resp.data ?? {}) as {
+        export_zip_url?: string;
+        export_path?: string;
+      };
+      // Update site with new export URL if provided
+      const updated: Site = {
+        ...current_site,
+        export_zip_url: data.export_zip_url ?? current_site.export_zip_url,
+      } as Site;
+      set_site(updated);
+      setIsExporting(false);
+    },
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message || err?.message || 'Export failed';
+      setExportError(msg);
+      setIsExporting(false);
     },
   });
 

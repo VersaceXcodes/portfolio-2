@@ -60,7 +60,7 @@ const UV_SEOEditor: React.FC = () => {
       );
       return resp.data;
     },
-      onSuccess: (data) => {
+    onSuccess: (data) => {
         // Backend may return the full Site payload or a partial; handle both
         const siteFromResponse = data?.data ?? data ?? {};
         // Update local inputs to reflect backend values (if backend normalizes)

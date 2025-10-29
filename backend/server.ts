@@ -94,7 +94,7 @@ const pool = new Pool(
   DATABASE_URL
     ? { 
         connectionString: DATABASE_URL, 
-        ssl: { rejectUnauthorized: false } 
+        ssl: { rejectUnauthorized: false } as any
       }
     : {
         host: PGHOST,
@@ -102,7 +102,7 @@ const pool = new Pool(
         user: PGUSER,
         password: PGPASSWORD,
         port: Number(PGPORT),
-        ssl: { rejectUnauthorized: false },
+        ssl: { rejectUnauthorized: false } as any,
       }
 );
 
@@ -244,8 +244,9 @@ const authenticateToken = async (req: AuthenticatedRequest, res: Response, next:
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayloadWithUser;
-    const result = await pool.query('SELECT id, username, email, full_name, created_at FROM users WHERE id = $1', [decoded.user_id]);
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const payload = decoded as JwtPayloadWithUser;
+    const result = await pool.query('SELECT id, username, email, full_name, created_at FROM users WHERE id = $1', [payload.user_id]);
     
     if (result.rows.length === 0) {
       return res.status(401).json(createErrorResponse('Invalid token - user not found', null, 'AUTH_USER_NOT_FOUND'));
@@ -528,7 +529,7 @@ app.post('/api/sites', authenticateToken, async (req: AuthenticatedRequest, res:
     }
 
     const site_id = uuidv4();
-    const subdomain = await generateUniqueSubdomain(req.user.username);
+    const subdomain = await generateUniqueSubdomain(req.user!.username);
 
     const result = await pool.query(`
       INSERT INTO portfolio_sites (
@@ -538,7 +539,7 @@ app.post('/api/sites', authenticateToken, async (req: AuthenticatedRequest, res:
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *
     `, [
-      site_id, req.user.id, site_title, tagline, hero_image_url, about_text,
+      site_id, req.user!.id, site_title, tagline, hero_image_url, about_text,
       template_id, primary_color, font_family, is_dark_mode,
       seo_title, seo_description, subdomain
     ]);
@@ -560,7 +561,7 @@ app.get('/api/sites', authenticateToken, async (req: AuthenticatedRequest, res: 
   try {
     const result = await pool.query(
       'SELECT * FROM portfolio_sites WHERE user_id = $1 ORDER BY created_at DESC',
-      [req.user.id]
+      [req.user!.id]
     );
 
     res.json({
@@ -618,7 +619,7 @@ app.put('/api/sites/:site_id', authenticateToken, async (req: AuthenticatedReque
       return res.status(404).json(createErrorResponse('Site not found', null, 'SITE_NOT_FOUND'));
     }
 
-    if (siteCheck.rows[0].user_id !== req.user.id) {
+    if (siteCheck.rows[0].user_id !== req.user!.id) {
       return res.status(403).json(createErrorResponse('Access denied', null, 'ACCESS_DENIED'));
     }
 
@@ -681,7 +682,7 @@ app.put('/api/sites/:site_id/publish', authenticateToken, async (req: Authentica
       return res.status(404).json(createErrorResponse('Site not found', null, 'SITE_NOT_FOUND'));
     }
 
-    if (siteCheck.rows[0].user_id !== req.user.id) {
+    if (siteCheck.rows[0].user_id !== req.user!.id) {
       return res.status(403).json(createErrorResponse('Access denied', null, 'ACCESS_DENIED'));
     }
 
@@ -719,7 +720,7 @@ app.post('/api/sites/:site_id/export', authenticateToken, async (req: Authentica
       return res.status(404).json(createErrorResponse('Site not found', null, 'SITE_NOT_FOUND'));
     }
 
-    if (siteCheck.rows[0].user_id !== req.user.id) {
+    if (siteCheck.rows[0].user_id !== req.user!.id) {
       return res.status(403).json(createErrorResponse('Access denied', null, 'ACCESS_DENIED'));
     }
 
@@ -765,7 +766,7 @@ app.put('/api/sites/:site_id/hero', authenticateToken, async (req: Authenticated
       return res.status(404).json(createErrorResponse('Site not found', null, 'SITE_NOT_FOUND'));
     }
 
-    if (siteCheck.rows[0].user_id !== req.user.id) {
+    if (siteCheck.rows[0].user_id !== req.user!.id) {
       return res.status(403).json(createErrorResponse('Access denied', null, 'ACCESS_DENIED'));
     }
 
@@ -804,7 +805,7 @@ app.put('/api/sites/:site_id/about', authenticateToken, async (req: Authenticate
       return res.status(404).json(createErrorResponse('Site not found', null, 'SITE_NOT_FOUND'));
     }
 
-    if (siteCheck.rows[0].user_id !== req.user.id) {
+    if (siteCheck.rows[0].user_id !== req.user!.id) {
       return res.status(403).json(createErrorResponse('Access denied', null, 'ACCESS_DENIED'));
     }
 
@@ -819,7 +820,7 @@ app.put('/api/sites/:site_id/about', authenticateToken, async (req: Authenticate
     if (avatar_url) {
       await pool.query(
         'UPDATE users SET avatar_url = $1 WHERE id = $2',
-        [avatar_url, req.user.id]
+        [avatar_url, req.user!.id]
       );
     }
 
@@ -851,7 +852,7 @@ app.put('/api/sites/:site_id/seo', authenticateToken, async (req: AuthenticatedR
       return res.status(404).json(createErrorResponse('Site not found', null, 'SITE_NOT_FOUND'));
     }
 
-    if (siteCheck.rows[0].user_id !== req.user.id) {
+    if (siteCheck.rows[0].user_id !== req.user!.id) {
       return res.status(403).json(createErrorResponse('Access denied', null, 'ACCESS_DENIED'));
     }
 
@@ -890,7 +891,7 @@ app.put('/api/sites/:site_id/theme', authenticateToken, async (req: Authenticate
       return res.status(404).json(createErrorResponse('Site not found', null, 'SITE_NOT_FOUND'));
     }
 
-    if (siteCheck.rows[0].user_id !== req.user.id) {
+    if (siteCheck.rows[0].user_id !== req.user!.id) {
       return res.status(403).json(createErrorResponse('Access denied', null, 'ACCESS_DENIED'));
     }
 
@@ -958,7 +959,7 @@ app.post('/api/sites/:site_id/projects', authenticateToken, async (req: Authenti
       return res.status(404).json(createErrorResponse('Site not found', null, 'SITE_NOT_FOUND'));
     }
 
-    if (siteCheck.rows[0].user_id !== req.user.id) {
+    if (siteCheck.rows[0].user_id !== req.user!.id) {
       return res.status(403).json(createErrorResponse('Access denied', null, 'ACCESS_DENIED'));
     }
 
@@ -1001,7 +1002,7 @@ app.put('/api/sites/:site_id/projects/:project_id', authenticateToken, async (re
       return res.status(404).json(createErrorResponse('Project not found', null, 'PROJECT_NOT_FOUND'));
     }
 
-    if (projectCheck.rows[0].user_id !== req.user.id) {
+    if (projectCheck.rows[0].user_id !== req.user!.id) {
       return res.status(403).json(createErrorResponse('Access denied', null, 'ACCESS_DENIED'));
     }
 
@@ -1066,7 +1067,7 @@ app.delete('/api/sites/:site_id/projects/:project_id', authenticateToken, async 
       return res.status(404).json(createErrorResponse('Project not found', null, 'PROJECT_NOT_FOUND'));
     }
 
-    if (projectCheck.rows[0].user_id !== req.user.id) {
+    if (projectCheck.rows[0].user_id !== req.user!.id) {
       return res.status(403).json(createErrorResponse('Access denied', null, 'ACCESS_DENIED'));
     }
 
@@ -1112,12 +1113,12 @@ app.post('/api/sites/:site_id/projects/:project_id/images', authenticateToken, u
       return res.status(404).json(createErrorResponse('Project not found', null, 'PROJECT_NOT_FOUND'));
     }
 
-    if (projectCheck.rows[0].user_id !== req.user.id) {
+    if (projectCheck.rows[0].user_id !== req.user!.id) {
       return res.status(403).json(createErrorResponse('Access denied', null, 'ACCESS_DENIED'));
     }
 
     const image_id = uuidv4();
-    const url = `/storage/${req.file.filename}`;
+    const url = `/storage/${req.file!.filename}`;
 
     const result = await pool.query(`
       INSERT INTO image_assets (image_id, site_id, project_id, url, alt_text)
@@ -1168,12 +1169,12 @@ app.post('/api/sites/:site_id/assets', authenticateToken, upload.single('asset')
       return res.status(404).json(createErrorResponse('Site not found', null, 'SITE_NOT_FOUND'));
     }
 
-    if (siteCheck.rows[0].user_id !== req.user.id) {
+    if (siteCheck.rows[0].user_id !== req.user!.id) {
       return res.status(403).json(createErrorResponse('Access denied', null, 'ACCESS_DENIED'));
     }
 
     const image_id = uuidv4();
-    const url = `/storage/${req.file.filename}`;
+    const url = `/storage/${req.file!.filename}`;
 
     const result = await pool.query(`
       INSERT INTO image_assets (image_id, site_id, url, alt_text)
@@ -1211,7 +1212,7 @@ app.put('/api/sites/:site_id/assets/:asset_id', authenticateToken, async (req: A
       return res.status(404).json(createErrorResponse('Asset not found', null, 'ASSET_NOT_FOUND'));
     }
 
-    if (assetCheck.rows[0].user_id !== req.user.id) {
+    if (assetCheck.rows[0].user_id !== req.user!.id) {
       return res.status(403).json(createErrorResponse('Access denied', null, 'ACCESS_DENIED'));
     }
 
@@ -1251,7 +1252,7 @@ app.delete('/api/sites/:site_id/assets/:asset_id', authenticateToken, async (req
       return res.status(404).json(createErrorResponse('Asset not found', null, 'ASSET_NOT_FOUND'));
     }
 
-    if (assetCheck.rows[0].user_id !== req.user.id) {
+    if (assetCheck.rows[0].user_id !== req.user!.id) {
       return res.status(403).json(createErrorResponse('Access denied', null, 'ACCESS_DENIED'));
     }
 
@@ -1346,11 +1347,11 @@ app.get('/api/dashboard/projects', authenticateToken, async (req: AuthenticatedR
 
     query += ' ORDER BY order_index ASC, created_at DESC';
 
-    const pageNum = typeof page === 'string' ? parseInt(page) : Number(page);
-    const pageSizeNum = typeof page_size === 'string' ? parseInt(page_size) : Number(page_size);
+    const pageNum = typeof page === 'string' ? parseInt(page) : (typeof page === 'number' ? page : 1);
+    const pageSizeNum = typeof page_size === 'string' ? parseInt(page_size) : (typeof page_size === 'number' ? page_size : 10);
     const offset = (pageNum - 1) * pageSizeNum;
     query += ` LIMIT $${param_index} OFFSET $${param_index + 1}`;
-    query_params.push(pageSizeNum, offset);
+    query_params.push(String(pageSizeNum), String(offset));
 
     const result = await pool.query(query, query_params);
 
@@ -1496,7 +1497,7 @@ app.get(/^(?!\/api).*/, (req, res) => {
 export { app, pool };
 
 // Start the server
-const portNum = typeof PORT === 'string' ? parseInt(PORT) : PORT;
+const portNum = typeof PORT === 'string' ? parseInt(PORT) : (typeof PORT === 'number' ? PORT : 3000);
 app.listen(portNum, '0.0.0.0', () => {
   console.log(`PortfolioPro API server running on port ${portNum} and listening on 0.0.0.0`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);

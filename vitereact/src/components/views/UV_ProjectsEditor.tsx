@@ -92,18 +92,17 @@ const UV_ProjectsEditor: React.FC = () => {
       );
       return resp.data;
     },
-      onSuccess: (data) => {
-        const apiProj: Project = (data?.data ?? data) as Project;
-        // Update local store
-        add_project(apiProj);
-        // Reset draft/new project form
-        setNewProject({ title: '', description: '', date: '', tags: [], images: [], demo_url: '', code_url: '', order_index: 0 });
-        // Clear draft for this id if existed
-        if (apiProj?.project_id) {
-          setDraftProjects(prev => ({ ...prev, [apiProj.project_id]: apiProj }));
-        }
-        queryClient.invalidateQueries({ queryKey: ['api', 'sites', site_id, 'projects'] });
-      },
+    onSuccess: (data) => {
+      const apiProj: Project = (data?.data ?? data) as Project;
+      // Update local store
+      add_project(apiProj);
+      // Reset draft/new project form
+      setNewProject({ title: '', description: '', date: '', tags: [], images: [], demo_url: '', code_url: '', order_index: 0 });
+      // Clear draft for this id if existed
+      if (apiProj?.project_id) {
+        setDraftProjects(prev => ({ ...prev, [apiProj.project_id]: apiProj }));
+      }
+      queryClient.invalidateQueries({ queryKey: ['api', 'sites', site_id, 'projects'] });
     },
   });
 
@@ -119,18 +118,16 @@ const UV_ProjectsEditor: React.FC = () => {
       );
       return resp.data;
     },
-    {
-      onSuccess: (data) => {
-        const apiProj: Project = (data?.data ?? data) as Project;
-        if (apiProj) {
-          update_project(apiProj);
-          setDraftProjects(prev => ({
-            ...prev,
-            [apiProj.project_id]: apiProj,
-          }));
-          queryClient.invalidateQueries({ queryKey: ['api', 'sites', site_id, 'projects'] });
-        }
-      },
+    onSuccess: (data) => {
+      const apiProj: Project = (data?.data ?? data) as Project;
+      if (apiProj) {
+        update_project(apiProj);
+        setDraftProjects(prev => ({
+          ...prev,
+          [apiProj.project_id]: apiProj,
+        }));
+        queryClient.invalidateQueries({ queryKey: ['api', 'sites', site_id, 'projects'] });
+      }
     },
   });
 
@@ -143,18 +140,17 @@ const UV_ProjectsEditor: React.FC = () => {
       );
       return resp.data;
     },
-      onSuccess: (data) => {
-        const removed = (data?.data ?? data) as Project;
-        if (removed?.project_id) {
-          delete_project(removed.project_id);
-          setDraftProjects(prev => {
-            const next = { ...prev };
-            delete next[removed.project_id];
-            return next;
-          });
-          queryClient.invalidateQueries({ queryKey: ['api', 'sites', site_id, 'projects'] });
-        }
-      },
+    onSuccess: (data) => {
+      const removed = (data?.data ?? data) as Project;
+      if (removed?.project_id) {
+        delete_project(removed.project_id);
+        setDraftProjects(prev => {
+          const next = { ...prev };
+          delete next[removed.project_id];
+          return next;
+        });
+        queryClient.invalidateQueries({ queryKey: ['api', 'sites', site_id, 'projects'] });
+      }
     },
   });
 
